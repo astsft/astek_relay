@@ -65,39 +65,26 @@ class AstekRelay:
     ###########################################################################
     # GET INFO
     def get_info( self ):
+        data = []
         connected = self.client.connect()
         if( connected ):
             try:
-                #rr = self.client.read_holding_registers( 0, 32, slave=self.modbus_addr)
-                rr = self.client.read_holding_registers( 0, 2, slave=self.modbus_addr)
-                '''
-                print( 'rr type: ', type(rr) )
-                if rr.isError():
-                    #data    = None
-                    return rr
-                else:
-                    data = rr
-                    obj     = BinaryPayloadDecoder.fromRegisters(raw.registers, byteorder=Endian.Big)
-                    data    = { 'DEVICE ID':        obj.decode_16bit_uint(),
+                rr = self.client.read_holding_registers( 0, 32, slave=self.addr)
+                if not rr.isError():
+                    obj     = BinaryPayloadDecoder.fromRegisters(rr.registers, byteorder=Endian.BIG)
+                    data    = { 'DEVICE ID':    obj.decode_16bit_uint(),
                             'HARDWARE ID':      obj.decode_16bit_uint(),
-                            'RESERVED':         obj.skip_bytes(14*2),
+                            'EMPTY':            obj.skip_bytes(14*2),
                             'SERIAL NUM, HI':   obj.decode_64bit_uint(),
                             'SERIAL NUM, LO':   obj.decode_64bit_uint(),
                             #'SERIAL NUMBER':    obj.decode_string(8),
-                            'RESERVED':         obj.skip_bytes(16),
+                            'EMPTY':            obj.skip_bytes(16),
                         }
-                '''
             except ModbusException as exc:
-                #raise exc
-                print('ModbusException: ', exc)
-
-        self.client.close()
-
-        #print(opened)
-        #if not opened:
-        #    return False
-
-        return connected
+                #print('ModbusException: ', exc)
+                raise exc
+            self.client.close()
+        return data
     ###########################################################################
     # GET INFO
     def scan( self ):
@@ -158,6 +145,11 @@ if __name__ == '__main__':
     print('Scanning for Modbus address...')
     baud, addr = relay.scan()
     if addr != 0:
+        print('\r\nCheck info...')
+        info = relay.get_info()
+        for key in info:
+            if key != 'EMPTY':
+                print( '%16s: %04X' % (key, info[key]) )
         print('\r\nRun test sequence...')
         try:
             while( True ):
