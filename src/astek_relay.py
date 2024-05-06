@@ -142,7 +142,7 @@ if __name__ == '__main__':
     port        = cp.get(     'MODBUS',   'port'      )
 
     relay = AstekRelay(port)
-    print('Scanning for Modbus address...')
+    print('Scan for Modbus address...')
     baud, addr = relay.scan()
     if addr != 0:
         print('\r\nCheck info...')
